@@ -262,6 +262,70 @@ Pour utiliser les commandes manuellement:
 source venv/bin/activate
 ```
 
+## ⚠️ Note importante : Fusion avec modèles quantizés (GPT-OSS)
+
+### Problème identifié
+
+Lors du fine-tuning de **modèles déjà quantizés** (comme `gpt-oss-20b-MXFP4-Q8`), la fusion directe avec `mlx_lm.fuse` **perd les comportements appris** :
+
+- ✅ **Adaptateurs + modèle de base** : Réponses correctes
+- ❌ **Fusion directe** : Réponses incorrectes (comportement comme si non fine-tuné)
+
+**Cause** : La fusion avec des modèles quantizés n'est **pas numériquement stable** ([Issue #654](https://github.com/ml-explore/mlx-lm/issues/654)). Le quantizer MXFP4 est moins précis que le quantizer affine utilisé par `mlx_lm.convert`.
+
+### Solution : Fusion en 2 étapes
+
+Pour les modèles quantizés, utilisez cette procédure en 2 étapes :
+
+#### Étape 1 : Fusionner en dequantizant vers FP16
+
+```bash
+source venv/bin/activate
+python -m mlx_lm fuse \
+  --model "mlx-community/gpt-oss-20b-MXFP4-Q8" \
+  --adapter-path ./adapters \
+  --save-path ./fused_fp16 \
+  --dequantize
+```
+
+#### Étape 2 : Re-quantizer avec le quantizer affine
+
+```bash
+python -m mlx_lm convert \
+  --hf-path ./fused_fp16 \
+  --mlx-path ./fused_model \
+  --quantize \
+  --q-bits 8 \
+  --q-group-size 64
+```
+
+#### Nettoyage (optionnel)
+
+```bash
+rm -rf fused_fp16  # Économise ~39 GB
+```
+
+### Résultats de la fusion en 2 étapes
+
+| Méthode | Comportement | VRAM | Vitesse | Taille |
+|---------|--------------|------|---------|--------|
+| Modèle base + adaptateurs | ✅ Correct | 12.6 GB | 86 tok/s | 11 GB + 282 MB |
+| Fusion directe | ❌ Incorrect | 12.2 GB | 129 tok/s | 11 GB |
+| **Fusion 2 étapes** | ✅ Correct | 22.3 GB | 97 tok/s | 21 GB |
+
+### Modèles concernés
+
+Cette procédure en 2 étapes est **recommandée** pour tous les modèles déjà quantizés :
+- GPT-OSS 20B (MXFP4-Q8, MXFP4-Q4)
+- Mistral 7B (4-bit)
+- Llama (4-bit, 8-bit)
+
+Pour les modèles **non quantizés**, la fusion directe fonctionne normalement.
+
+### Référence
+
+Solution confirmée et documentée dans [mlx-lm Issue #654](https://github.com/ml-explore/mlx-lm/issues/654) (résolu décembre 2025).
+
 ## Référence
 
 Basé sur la session WWDC 2025 #298 : "Fine-tune language models on Mac with MLX"
