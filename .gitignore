@@ -1,0 +1,49 @@
+# Python
+venv/
+__pycache__/
+*.py[cod]
+*$py.class
+*.so
+.Python
+*.egg-info/
+dist/
+build/
+
+# Environnement virtuel
+env/
+ENV/
+venv/
+.venv
+
+# Modèles fine-tunés (trop gros pour git)
+mistral-bb-finetuned/
+adapters/
+*.safetensors
+*.bin
+
+# MacOS
+.DS_Store
+.AppleDouble
+.LSOverride
+
+# IDE
+.vscode/
+.idea/
+*.swp
+*.swo
+*~
+
+# Logs
+*.log
+
+# Données sensibles
+.env
+*.key
+credentials.json
+
+# Jupyter
+.ipynb_checkpoints/
+*.ipynb
+
+# Cache MLX
+.cache/
