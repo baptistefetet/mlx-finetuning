@@ -16,7 +16,7 @@ venv/
 .venv
 
 # Modèles fine-tunés (trop gros pour git)
-mistral-bb-finetuned/
+fused_model/
 adapters/
 *.safetensors
 *.bin

@@ -1,4 +1,4 @@
-# Fine-Tuning MLX - Projet Brigitte Bardot
+# Fine-Tuning MLX
 
 Ce projet reproduit l'expérience de fine-tuning MLX présentée dans la vidéo WWDC 2025 (session 298).
 
